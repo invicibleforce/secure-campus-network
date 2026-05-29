@@ -1,0 +1,85 @@
+!
+! R-Core — Inter-VLAN routing + departmental ACLs
+! Project 2 — Secure Campus Network
+!
+hostname R-Core
+!
+service password-encryption
+!
+enable secret Str0ngEnable!
+!
+ip domain-name campus.local
+!
+username admin privilege 15 secret Adm1nSecret!
+!
+banner motd #Authorized Access Only. Violators will be prosecuted.#
+!
+!--- Serial link to R-Edge
+interface Serial0/3/0
+ description To R-Edge
+ ip address 10.1.1.2 255.255.255.252
+ no shutdown
+!
+!--- Physical trunk port to access switches
+interface GigabitEthernet0/0
+ description Trunk to access switches
+ no shutdown
+!
+!--- HR VLAN 10 sub-interface
+interface GigabitEthernet0/0.10
+ description HR VLAN 10
+ encapsulation dot1Q 10
+ ip address 172.16.10.1 255.255.255.0
+ ip access-group HR-IN in
+!
+!--- Finance VLAN 20 sub-interface
+interface GigabitEthernet0/0.20
+ description Finance VLAN 20
+ encapsulation dot1Q 20
+ ip address 172.16.20.1 255.255.255.0
+ ip access-group FIN-IN in
+!
+!--- IT VLAN 30 sub-interface
+interface GigabitEthernet0/0.30
+ description IT VLAN 30
+ encapsulation dot1Q 30
+ ip address 172.16.30.1 255.255.255.0
+ ip access-group IT-IN in
+!
+!--- Default route to R-Edge for internet/DMZ
+ip route 0.0.0.0 0.0.0.0 10.1.1.1
+!
+!--- HR-IN: blocks HR-initiated traffic to Finance, allows replies
+ip access-list extended HR-IN
+ deny icmp 172.16.10.0 0.0.0.255 172.16.20.0 0.0.0.255 echo
+ permit icmp 172.16.10.0 0.0.0.255 172.16.20.0 0.0.0.255 echo-reply
+ deny ip 172.16.10.0 0.0.0.255 172.16.20.0 0.0.0.255
+ deny icmp 172.16.10.0 0.0.0.255 host 172.16.10.1
+ permit tcp any host 203.0.113.10 eq 80
+ permit tcp any host 203.0.113.10 eq 443
+ permit ip any any
+!
+!--- FIN-IN: protects Finance gateway from pings
+ip access-list extended FIN-IN
+ deny icmp 172.16.20.0 0.0.0.255 host 172.16.20.1
+ permit ip any any
+!
+!--- IT-IN: unrestricted (explicit for documentation)
+ip access-list extended IT-IN
+ permit ip any any
+!
+!--- SSH configuration
+ip ssh version 2
+!
+line console 0
+ password C0nsolePW
+ login
+ exec-timeout 5 0
+ logging synchronous
+!
+line vty 0 4
+ transport input ssh
+ login local
+ exec-timeout 5 0
+!
+end

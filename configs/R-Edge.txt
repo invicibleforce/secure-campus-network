@@ -1,0 +1,61 @@
+!
+! R-Edge — Internet edge router
+! Project 2 — Secure Campus Network
+!
+hostname R-Edge
+!
+service password-encryption
+!
+enable secret Str0ngEnable!
+!
+ip domain-name campus.local
+!
+username admin privilege 15 secret Adm1nSecret!
+!
+banner motd #Authorized Access Only. Violators will be prosecuted.#
+!
+!--- Interface to simulated internet
+interface GigabitEthernet0/0
+ description To Internet
+ ip address 8.8.8.2 255.255.255.0
+ ip access-group FROM-INTERNET in
+ no shutdown
+!
+!--- Interface to DMZ switch
+interface GigabitEthernet0/1
+ description To DMZ Switch
+ ip address 203.0.113.1 255.255.255.240
+ no shutdown
+!
+!--- Serial link to R-Core (DCE end)
+interface Serial0/3/0
+ description To R-Core
+ ip address 10.1.1.1 255.255.255.252
+ clock rate 64000
+ no shutdown
+!
+!--- Static route to all internal subnets via R-Core
+ip route 172.16.0.0 255.255.0.0 10.1.1.2
+!
+!--- Perimeter ACL: allow internet → web server, block internet → internal
+ip access-list extended FROM-INTERNET
+ permit tcp any host 203.0.113.10 eq 80
+ permit tcp any host 203.0.113.10 eq 443
+ deny ip any 172.16.0.0 0.0.255.255
+ permit ip any any
+!
+!--- SSH configuration
+ip ssh version 2
+!
+line console 0
+ password C0nsolePW
+ login
+ exec-timeout 5 0
+ logging synchronous
+!
+line vty 0 4
+ transport input ssh
+ login local
+ exec-timeout 5 0
+!
+end

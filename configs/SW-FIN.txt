@@ -1,0 +1,59 @@
+!
+! SW-FIN — Finance access switch, VLAN 20
+! Project 2 — Secure Campus Network
+!
+hostname SW-FIN
+!
+service password-encryption
+!
+enable secret Str0ngEnable!
+!
+ip domain-name campus.local
+!
+username admin privilege 15 secret Adm1nSecret!
+!
+banner motd #Authorized Access Only. Violators will be prosecuted.#
+!
+!--- VLAN database
+vlan 10
+ name HR
+vlan 20
+ name Finance
+vlan 30
+ name IT
+!
+!--- Access ports for Finance users
+interface range FastEthernet0/1 - 9
+ description Finance Department
+ switchport mode access
+ switchport access vlan 20
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security mac-address sticky
+ switchport port-security violation restrict
+!
+!--- Unused ports shut down
+interface range FastEthernet0/10 - 24
+ shutdown
+!
+!--- Uplink to SW-HR (end of daisy-chain)
+interface GigabitEthernet0/1
+ description Trunk to SW-HR
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30
+!
+!--- SSH configuration
+ip ssh version 2
+!
+line console 0
+ password C0nsolePW
+ login
+ exec-timeout 5 0
+ logging synchronous
+!
+line vty 0 4
+ transport input ssh
+ login local
+ exec-timeout 5 0
+!
+end

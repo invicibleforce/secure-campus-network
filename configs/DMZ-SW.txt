@@ -1,0 +1,45 @@
+!
+! DMZ-SW — DMZ segment switch
+! Project 2 — Secure Campus Network
+!
+hostname DMZ-SW
+!
+service password-encryption
+!
+enable secret Str0ngEnable!
+!
+ip domain-name campus.local
+!
+username admin privilege 15 secret Adm1nSecret!
+!
+banner motd #Authorized Access Only. Violators will be prosecuted.#
+!
+!--- Port to WebServer
+interface FastEthernet0/1
+ description To WebServer
+ switchport mode access
+!
+!--- Uplink to R-Edge
+interface GigabitEthernet0/1
+ description To R-Edge Gi0/1
+ switchport mode access
+!
+!--- Unused ports shut down
+interface range FastEthernet0/2 - 24
+ shutdown
+!
+!--- SSH configuration
+ip ssh version 2
+!
+line console 0
+ password C0nsolePW
+ login
+ exec-timeout 5 0
+ logging synchronous
+!
+line vty 0 4
+ transport input ssh
+ login local
+ exec-timeout 5 0
+!
+end
