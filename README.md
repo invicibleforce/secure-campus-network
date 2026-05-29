@@ -47,7 +47,7 @@ This is **Project 2** in my Packet Tracer series, building on a basic multi-VLAN
 
 ## Topology
 
-![Network Topology](docs/topology-diagram.png)
+![Network Topology](docs/topology diagram.png)
 
 ```
                   [Internet-Host 8.8.8.10/24]
